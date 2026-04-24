@@ -1,5 +1,7 @@
 package com.radha.smartclaim.documentservice.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import com.radha.smartclaim.documentservice.repository.DocumentRepository;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class DocumentService {
     private final DocumentRepository documentRepository;
     private final DocumentProcessingService processingService;
+    private static final Logger log = LoggerFactory.getLogger(DocumentService.class);
 
     public DocumentService(DocumentRepository documentRepository, DocumentProcessingService processingService) {
         this.documentRepository = documentRepository;
@@ -21,6 +24,7 @@ public class DocumentService {
     }
 
     public Document uploadDocument(MultipartFile file, long userId) throws IOException {
+        log.info("Received document upload request from user {}", userId);
         if (file.isEmpty()) {
             throw new RuntimeException("File is empty");
         }
@@ -36,12 +40,12 @@ public class DocumentService {
         String uploadDir = System.getProperty("user.dir") + File.separator + "uploads" + File.separator;
         String fileName = System.currentTimeMillis() + "_" + originalName;
         String path = uploadDir + fileName;
-
         File dir = new File(uploadDir);
         if (!dir.exists())
             dir.mkdirs();
         File dest = new File(path);
         file.transferTo(dest);
+        log.info("File saved at path {}", path);
 
         Document doc = new Document();
         doc.setFilePath(path);
@@ -50,7 +54,9 @@ public class DocumentService {
         doc.setUserId(userId);
         doc.setParseStatus(ParseStatus.PENDING);
         Document saved = documentRepository.save(doc);
+        log.info("Document {} saved to database", saved.getId());
         processingService.processDocument(saved);
+        log.info("Document processing started for: {}", saved.getId());
         return saved;
     }
 

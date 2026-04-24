@@ -5,16 +5,20 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.json.JsonMapper;
 import com.radha.smartclaim.documentservice.dto.ParsedDocumentDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class AIParsingService {
     private final ChatModel chatModel;
+    private static final Logger log = LoggerFactory.getLogger(AIParsingService.class);
 
     public AIParsingService(ChatModel chatModel) {
         this.chatModel = chatModel;
     }
 
     public String parseText(String ocrText) {
+        log.info("Starting AI parsing for OCR text");
         if (ocrText == null || ocrText.isBlank()) {
             throw new RuntimeException("OCR text is null or empty");
         }
@@ -34,7 +38,9 @@ public class AIParsingService {
                 .getResult()
                 .getOutput()
                 .getText();
+        log.info("AI raw response");
         String cleanedResponse = cleanResponse(raw);
+        log.info("Cleaned JSON");
         return cleanedResponse;
     }
 
@@ -56,6 +62,7 @@ public class AIParsingService {
             JsonMapper mapper = JsonMapper.builder().build();
             return mapper.readValue(json, ParsedDocumentDto.class);
         } catch (Exception e) {
+            log.error("Failed to parse JSON", e);
             throw new RuntimeException("Failed to parse JSON: " + e.getMessage());
         }
     }
