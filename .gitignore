@@ -1,0 +1,19 @@
+# Build files
+target/
+*.class
+*.jar
+
+# Logs
+*.log
+
+# Secrets
+application.properties
+.env
+
+# Uploads
+uploads/
+
+# OS junk
+.DS_Store
+Thumbs.db
+.vscode/
